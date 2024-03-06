@@ -1,0 +1,138 @@
+[gd_scene load_steps=13 format=3 uid="uid://d14o7d6k0p67q"]
+
+[ext_resource type="Texture2D" uid="uid://ca3bhpy661pxf" path="res://Character/Idle/Idle-Sheet.png" id="1_ci02s"]
+[ext_resource type="Script" path="res://npc.gd" id="1_exsry"]
+[ext_resource type="Script" path="res://NPCArea.gd" id="3_ugy8k"]
+[ext_resource type="Script" path="res://NPC_dialog.gd" id="4_egfv8"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_l2vvm"]
+size = Vector2(15, 46)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_qd2v4"]
+size = Vector2(52, 51)
+
+[sub_resource type="Animation" id="Animation_rfaq1"]
+resource_name = "idle"
+length = 0.4
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:texture")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [ExtResource("1_ci02s")]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Sprite2D:hframes")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [4]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("Sprite2D:frame")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 1,
+"values": [0, 1, 2, 3]
+}
+
+[sub_resource type="Animation" id="Animation_5gtuu"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [0]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_5tuvo"]
+_data = {
+"RESET": SubResource("Animation_5gtuu"),
+"idle": SubResource("Animation_rfaq1")
+}
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_4fx8d"]
+animation = &"idle"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_kwe4p"]
+advance_mode = 2
+
+[sub_resource type="AnimationNodeStateMachine" id="AnimationNodeStateMachine_2h2ak"]
+states/Start/position = Vector2(202, 100)
+states/idle/node = SubResource("AnimationNodeAnimation_4fx8d")
+states/idle/position = Vector2(374, 106)
+transitions = ["Start", "idle", SubResource("AnimationNodeStateMachineTransition_kwe4p")]
+
+[node name="NPC" type="CharacterBody2D"]
+script = ExtResource("1_exsry")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("1_ci02s")
+hframes = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(-0.5, 1)
+shape = SubResource("RectangleShape2D_l2vvm")
+
+[node name="Area2D" type="Area2D" parent="." node_paths=PackedStringArray("npc_shape", "label")]
+collision_mask = 3
+script = ExtResource("3_ugy8k")
+npc_shape = NodePath("../CollisionShape2D")
+label = NodePath("../Label")
+
+[node name="InteractionShape" type="CollisionShape2D" parent="Area2D"]
+position = Vector2(0, -1.5)
+shape = SubResource("RectangleShape2D_qd2v4")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+"": SubResource("AnimationLibrary_5tuvo")
+}
+
+[node name="AnimationTree" type="AnimationTree" parent="."]
+active = false
+libraries = {
+"": SubResource("AnimationLibrary_5tuvo")
+}
+tree_root = SubResource("AnimationNodeStateMachine_2h2ak")
+anim_player = NodePath("../AnimationPlayer")
+
+[node name="Label" type="Label" parent="."]
+visible = false
+offset_left = -51.0
+offset_top = -50.0
+offset_right = 61.0
+offset_bottom = -27.0
+text = "Press E to Talk"
+
+[node name="PopupPanel" type="PopupPanel" parent="." node_paths=PackedStringArray("label")]
+title = "Weary Pilgrim"
+initial_position = 4
+visible = true
+script = ExtResource("4_egfv8")
+label = NodePath("../Label")
+
+[connection signal="body_entered" from="Area2D" to="Area2D" method="_on_body_entered"]
+[connection signal="body_exited" from="Area2D" to="Area2D" method="_on_body_exited"]
